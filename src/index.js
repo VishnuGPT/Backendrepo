@@ -3,9 +3,7 @@ const express = require('express');
 const {connectRedis} = require('./config/redis');
 const validationRoutes = require('./routes/validationRoutes');
 const sequelize = require('./config/database');
-const transporterRoutes = require('./routes/transporterRoutes');
 const shipperRoutes = require('./routes/shipperRoutes');
-const vehicleRoutes = require('./routes/vehicleRoutes');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const shipmentRoutes = require('./routes/shipmentRoutes');
 
@@ -14,7 +12,7 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = ['http://localhost:3000', 'https://logixjunction.com/'];
+const allowedOrigins = ['http://localhost:3000', 'https://logixjunction.com/', 'http://localhost:5173'];
 
 // Middleware
 app.use(cors({

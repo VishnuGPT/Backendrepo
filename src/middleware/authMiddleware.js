@@ -3,8 +3,6 @@ const { Admin, Shipper } = require('../models');
 
 
 // Middleware to protect routes - verifies JWT token
-const jwt = require('jsonwebtoken');
-const { Shipper } = require('../models');
 
 exports.protectShipper = async (req, res, next) => {
   let token;
