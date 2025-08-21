@@ -7,5 +7,6 @@ const router = express.Router();
 // POST route for creating a new shipment (Protected route)
 router.post('/create', protectShipper, shipmentController.createShipment);
 
+router.post('/get-all-shipments', protectShipper, shipmentController.getAllShipmentsForShipper);
 
 module.exports = router;

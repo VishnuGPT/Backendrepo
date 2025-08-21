@@ -4,61 +4,130 @@ const ShipmentModification = require('../models/shipmentModification');
 const {sendEmail} = require('../utils/helperUtils');
 const { Offer } = require('../models');
 
+
 exports.createShipment = async (req, res) => {
   try {
-    const { pickupLocation, dropLocation, pickupState, dropState, materialType, pickupDate, coolingType, urgency, additionalNotes, estimatedDeliveryDate, loadingAssistance, weightKg, lengthFt, widthFt, heightFt, valueInr, shipmentType } = req.body;
+    const {
+      pickupAddressLine1,
+      pickupAddressLine2,
+      pickupState,
+      pickupPincode,
+      dropAddressLine1,
+      dropAddressLine2,
+      dropState,
+      dropPincode,
+      materialType,
+      customMaterialType,
+      weight,
+      length,
+      width,
+      height,
+      expectedPickup,
+      expectedDelivery,
+      transportMode,
+      shipmentType,
+      bodyType,
+      truckSize,
+      manpower,
+      noOfLabours,
+      coolingType,
+      materialValue,
+      additionalNotes,
+    } = req.body;
 
-    // Validate required fields
-    if (!pickupLocation || !dropLocation || !pickupState || !dropState || !materialType || !pickupDate || !coolingType || !urgency || !loadingAssistance || !weightKg || !lengthFt || !widthFt || !heightFt || !estimatedDeliveryDate || !valueInr || !shipmentType) {
+    // required field validation
+    const requiredFields = [
+      "pickupAddressLine1",
+      "pickupState",
+      "pickupPincode",
+      "dropAddressLine1",
+      "dropState",
+      "dropPincode",
+      "materialType",
+      "weight",
+      "expectedPickup",
+      "expectedDelivery",
+      "shipmentType",
+      "bodyType",
+      "materialValue",
+    ];
+
+    const missingField = requiredFields.find((field) => !req.body[field]);
+    if (missingField) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message: `Missing required field: ${missingField}`,
       });
     }
 
-    //Get shipperId from JWT token
-    const shipperId = req.user.shipperId;
-    // Create shipment
-    const shipment = await Shipment.create({
+    const shipperId = req.user?.shipperId;
+    if (!shipperId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized: Shipper ID not found." });
+    }
+
+    // handle file upload
+    const ebayBillUrl = req.file ? req.file.path : null;
+
+    const newShipment = await Shipment.create({
       shipperId,
-      pickupLocation,
-      dropLocation,
-      pickupDate,
+      pickupAddressLine1,
+      pickupAddressLine2,
+      pickupState,
+      pickupPincode,
+      dropAddressLine1,
+      dropAddressLine2,
+      dropState,
+      dropPincode,
+      expectedPickupDate: expectedPickup,
+      expectedDeliveryDate: expectedDelivery,
       materialType,
-      coolingType,
-      additionalNotes,
-      loadingAssistance,
-      weightKg,
-      lengthFt,
-      widthFt,
-      heightFt,
-      goodsValueInr,
+      customMaterialType, // when selected custom in materialType selected field
+      weightKg: weight,
+      lengthFt: length,
+      widthFt: width,
+      heightFt: height,
+      transportMode, 
       shipmentType,
-      eBayBillUrl: 'http://url.com',
+      bodyType,
+      truckSize, 
+      manpowerRequired: manpower, // "yes" / "no"
+      noOfLabours, //when manpower is "yes"
+      coolingType,
+      materialValueInr: materialValue,
+      additionalNotes,
+      ebayBillUrl,
     });
-    //Send email notifications to all admins
-    const admins = await Admin.findAll();
-    admins.forEach(admin => {
-      sendEmail({
-        to: admin.email,
-        subject: 'New Shipment Created',
-        html: `A new shipment has been created with ID: ${shipment.id}`
-      });
-    });
+
+    // async notify admins
+    Admin.findAll()
+      .then((admins) => {
+        admins.forEach((admin) => {
+          sendEmail({
+            to: admin.email,
+            subject: "New Shipment Request Received",
+            html: `A new shipment request (#${newShipment.id}) has been created by shipper #${shipperId}. Please review it in the admin panel.`,
+          });
+        });
+      })
+      .catch((err) =>
+        console.error("Failed to send admin notifications:", err)
+      );
 
     return res.status(201).json({
       success: true,
-      data: shipment
+      message: "Shipment request created successfully!",
+      data: newShipment,
     });
   } catch (error) {
-    console.error('Error creating shipment:', error);
+    console.error("Error creating shipment:", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "An unexpected error occurred on the server.",
     });
   }
-}
-
+};
 exports.getOfferForAShipment = async (req, res) => {
   try {
     if (!req.body.shipmentId) {
@@ -105,7 +174,6 @@ exports.getModificationRequestedForShipment = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
-
 
 
 exports.getRequestedShipments = async (req, res) => {
@@ -170,3 +238,26 @@ exports.getAllInfoForShipment = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+exports.getAllShipmentsForShipper = async(req,res)=>{
+  try {
+    const shipperId = req.user.shipperId;
+
+    if (!shipperId) {
+      return res.status(400).json({ message: 'Shipper ID is required' });
+    }
+
+    const shipments = await Shipment.findAll({
+      where: { shipperId },
+    });
+
+    if (!shipments || shipments.length === 0) {
+      return res.status(404).json({ message: 'No shipments found for this shipper' });
+    }
+
+    res.status(200).json({ shipments });
+  } catch (error) {
+    console.error('Error fetching shipments for shipper:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}

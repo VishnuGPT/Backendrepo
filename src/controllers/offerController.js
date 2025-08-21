@@ -1,8 +1,7 @@
 import Shipment from '../models/shipment';
 import Offer from '../models/offer';
 import sendEmail from '../utils/sendEmail'; 
-
-
+import Admin from '../models/admin'
 
 
 exports.offerShipment = async (req, res) => {
@@ -46,8 +45,6 @@ exports.offerShipment = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-
-
 
 
 //for admin to update offer after client rejects it or its needed to update the offer
@@ -139,8 +136,8 @@ exports.respondToOffer = async (req, res) => {
       // 2. Apply offer details to shipment
       const shipment = offer.Shipment;
       shipment.cost = offer.offerPrice;
-      shipment.pickupDate = offer.pickupDate;
-      shipment.estimatedDeliveryDate = offer.expectedDeliveryDate;
+      shipment.expectedPickupDate = offer.pickupDate;
+      shipment.expectedDeliveryDate = offer.expectedDeliveryDate;
       shipment.status = 'CONFIRMED';
       await shipment.save();
 

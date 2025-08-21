@@ -16,23 +16,134 @@ const ShipmentModification = sequelize.define('ShipmentModification', {
         },
         field: 'shipment_id'
     },
-    modifiedBy: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        field: 'modified_by' // shipperId (from JWT)
+        // --- Pickup Info ---
+    pickupAddressLine1: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "pickup_address_line_1",
     },
-    changedFields: {
-        type: DataTypes.JSON,
-        allowNull: false,
-        field: 'changed_fields'
-        /**
-         Example stored JSON:
-         {
-           "pickupLocation": { "old": "Delhi", "new": "Mumbai" },
-           "goodsValueInr": { "old": 5000, "new": 6000 }
-         }
-        */
+    pickupAddressLine2: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "pickup_address_line_2",
     },
+    pickupState: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "pickup_state",
+    },
+    pickupPincode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "pickup_pincode",
+    },
+
+    // --- Drop Info ---
+    dropAddressLine1: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "drop_address_line_1",
+    },
+    dropAddressLine2: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "drop_address_line_2",
+    },
+    dropState: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "drop_state",
+    },
+    dropPincode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "drop_pincode",
+    },
+
+    // --- Schedule ---
+    expectedPickupDate: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      field: "expected_pickup_date",
+    },
+    expectedDeliveryDate: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      field: "expected_delivery_date",
+    },
+
+    // --- Cargo Details ---
+    materialType: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "material_type",
+    },
+    customMaterialType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "custom_material_type",
+    },
+    weightKg: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      field: "weight_kg",
+    },
+    lengthFt: { type: DataTypes.FLOAT, allowNull: true, field: "length_ft" },
+    widthFt: { type: DataTypes.FLOAT, allowNull: true, field: "width_ft" },
+    heightFt: { type: DataTypes.FLOAT, allowNull: true, field: "height_ft" },
+
+    materialValue: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      field: "material_value",
+    },
+
+    additionalNotes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: "additional_notes",
+    },
+
+    // --- Logistics ---
+    transportMode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "transport_mode",
+    },
+    shipmentType: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "shipment_type",
+    },
+    bodyType: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "body_type",
+    },
+    truckSize: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "truck_size",
+    },
+    coolingType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "cooling_type",
+    },
+
+    manpower: {
+      type: DataTypes.ENUM("yes", "no"),
+      allowNull: true,
+      defaultValue: "no",
+      field: "manpower",
+    },
+    noOfLabours: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+      field: "no_of_labours",
+    },
+
     resolved: {
         type: DataTypes.ENUM('true', 'false'),
         defaultValue: 'false',
@@ -45,10 +156,10 @@ const ShipmentModification = sequelize.define('ShipmentModification', {
         allowNull: false,
         field: 'status'
     },
-    additionalNotes: {
+    changeReason: {
         type: DataTypes.STRING ,
         allowNull: true,
-        field: 'additional_notes'
+        field: 'change_reason'
     },
     createdAt: {
         type: DataTypes.DATE,

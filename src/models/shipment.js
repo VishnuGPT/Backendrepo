@@ -1,123 +1,186 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
-const Shipment = sequelize.define('Shipment', {
+const Shipment = sequelize.define(
+  "Shipment",
+  {
     id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
-    shipperId: {//from jwt (req.user)
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: 'shippers',
-            key: 'id'
-        },
-        field: 'shipper_id',
+
+    shipperId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "shippers",
+        key: "id",
+      },
+      field: "shipper_id",
     },
-    pickupLocation: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        field: 'pickup_location'
+
+    // --- Pickup Info ---
+    pickupAddressLine1: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "pickup_address_line_1",
     },
-    dropLocation: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        field: 'drop_location'
+    pickupAddressLine2: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "pickup_address_line_2",
     },
-    pickupDate: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        field: 'pickup_date'
+    pickupState: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "pickup_state",
     },
+    pickupPincode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "pickup_pincode",
+    },
+
+    // --- Drop Info ---
+    dropAddressLine1: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "drop_address_line_1",
+    },
+    dropAddressLine2: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "drop_address_line_2",
+    },
+    dropState: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "drop_state",
+    },
+    dropPincode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "drop_pincode",
+    },
+
+    // --- Schedule ---
+    expectedPickupDate: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      field: "expected_pickup_date",
+    },
+    expectedDeliveryDate: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      field: "expected_delivery_date",
+    },
+
+    // --- Cargo Details ---
     materialType: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        field: 'material_type'
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "material_type",
     },
-    additionalNotes: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        field: 'additional_notes'
-    },
-    loadingAssistance: {
-        type: DataTypes.ENUM('yes','no'),
-        allowNull: false,
-        field: 'loading_assistance'
-    },
-    coolingType: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        field: 'cooling_type'
+    customMaterialType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "custom_material_type",
     },
     weightKg: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        field: 'weight_kg'
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      field: "weight_kg",
     },
-    lengthFt: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        field: 'length_ft'
+    lengthFt: { type: DataTypes.FLOAT, allowNull: true, field: "length_ft" },
+    widthFt: { type: DataTypes.FLOAT, allowNull: true, field: "width_ft" },
+    heightFt: { type: DataTypes.FLOAT, allowNull: true, field: "height_ft" },
+
+    materialValue: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      field: "material_value",
     },
-    widthFt: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        field: 'width_ft'
+
+    additionalNotes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: "additional_notes",
     },
-    heightFt: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        field: 'height_ft'
-    },
-    estimatedDeliveryDate: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        field: 'estimated_delivery_date'
-    },
-    goodsValueInr: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        field: 'goods_value_inr'
+
+    // --- Logistics ---
+    transportMode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "transport_mode",
     },
     shipmentType: {
-        type: DataTypes.ENUM('full_truck_load', 'part_truck_load'),
-        allowNull: false,
-        field: 'shipment_type'
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "shipment_type",
     },
-    eBayBillUrl: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        field: 'ebay_bill_url'
+    bodyType: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "body_type",
     },
-    status: {
-        type: DataTypes.ENUM('REQUESTED', 'OFFER_SENT', 'CONFIRMED', 'REJECTED', 'MODIFICATION_REQUESTED','IN_TRANSIT','COMPLETED'),
-        defaultValue: 'REQUESTED',
-        allowNull: false,
-        field: 'status'
+    truckSize: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "truck_size",
     },
-    cost:{
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        field: 'cost'
+    coolingType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "cooling_type",
     },
-    createdAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        allowNull: false,
-        field: 'created_at'
-    },
-    updatedAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        allowNull: false,
-        field: 'updated_at'
-    }
-}, {
-    tableName: 'shipments',
-    timestamps: true
 
-})
+    manpower: {
+      type: DataTypes.ENUM("yes", "no"),
+      allowNull: true,
+      defaultValue: "no",
+      field: "manpower",
+    },
+    noOfLabours: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+      field: "no_of_labours",
+    },
+
+    // --- Attachments ---
+    ebayBill: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "ebay_bill",
+    },
+
+    // --- Status & Cost ---
+    status: {
+      type: DataTypes.ENUM(
+        "REQUESTED",
+        "OFFER_SENT",
+        "CONFIRMED",
+        "REJECTED",
+        "MODIFICATION_REQUESTED",
+        "IN_TRANSIT",
+        "COMPLETED"
+      ),
+      defaultValue: "REQUESTED",
+      allowNull: false,
+    },
+    cost: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      field: "cost",
+    },
+  },
+  {
+    tableName: "shipments",
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  }
+);
 
 module.exports = Shipment;
