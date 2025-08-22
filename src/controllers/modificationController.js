@@ -85,6 +85,7 @@ exports.requestModification = async (req, res) => {
             }
             ShipmentModification.create({
                     shipmentId,
+                    shipperId: modifiedBy,
                     pickupAddressLine1,
                     pickupAddressLine2,
                     pickupState,
@@ -113,7 +114,7 @@ exports.requestModification = async (req, res) => {
                     changeReason
                 });
 
-
+            //change shipment status to Modification Requested
             shipment.status = "MODIFICATION_REQUESTED";
             await shipment.save();
 
@@ -149,7 +150,7 @@ exports.requestModification = async (req, res) => {
 
 
 // FOR ADMIN TO REVIEW MODIFICATION REQUEST
-exports.reviewModification = async (req, res) => {
+exports.reviewModificationRequest = async (req, res) => {
     try {
         const { requestId, action } = req.body; // modification request ID + action ("accept" or "reject")
 
@@ -162,7 +163,7 @@ exports.reviewModification = async (req, res) => {
         }
 
         // Find the modification request
-        const modification = await ShipmentModification.findByPk(requestId);
+        const modification = await ShipmentModification.findByPk({ id: requestId });
 
         if (!modification) {
             return res.status(404).json({
@@ -276,6 +277,55 @@ exports.reviewModification = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Server error while reviewing shipment modification",
+        });
+    }
+};
+
+
+exports.getAllModificationsForAShipper = async (req, res) => {
+    try {
+        const shipperId = req.user.shipperId;
+        if (!shipperId) {
+            return res.status(401).json({ success: false, message: "Unauthorized: Shipper ID not found." });
+        }
+
+        const modifications = await ShipmentModification.findAll({ where: { shipperId } });
+        if(modifications.length === 0){
+            return res.status(404).json({ success: false, message: "No modification requests found for this shipper." });
+        }
+        return res.status(200).json({
+            success: true,
+            modifications
+        });
+    } catch (error) {
+        console.error("Error fetching modifications:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server error while fetching shipment modifications",
+        });
+    }
+};
+
+//Admin route to fetch all modification requests
+exports.getAllModificationsRequests = async (req, res) => {
+    try {
+        if (!req.user || !req.user.isAdmin) {
+            return res.status(403).json({ success: false, message: "Forbidden: Admin access required." });
+        }
+
+        const modifications = await ShipmentModification.findAll();
+        if (modifications.length === 0) {
+            return res.status(404).json({ success: false, message: "No modification requests found." });
+        }
+        return res.status(200).json({
+            success: true,
+            modifications
+        });
+    } catch (error) {
+        console.error("Error fetching modifications:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server error while fetching shipment modifications",
         });
     }
 };

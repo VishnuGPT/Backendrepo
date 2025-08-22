@@ -3,17 +3,17 @@ import Offer from '../models/offer';
 import sendEmail from '../utils/sendEmail'; 
 import Admin from '../models/admin'
 
-
+//for admin to offer shipment
 exports.offerShipment = async (req, res) => {
     try {
         if (!req.user || req.user.userType !== 'admin') {
             return res.status(403).json({ message: 'Forbidden' });
         }
 
-        const { shipmentId, offerPrice, pickupDate, expectedDeliveryDate } = req.body;
+        const { shipperId, shipmentId, offerPrice, pickupDate, expectedDeliveryDate } = req.body;
 
         // Validate required fields
-        if (!shipmentId || !offerPrice || !pickupDate || !expectedDeliveryDate) {
+        if (!shipperId || !shipmentId || !offerPrice || !pickupDate || !expectedDeliveryDate) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
@@ -26,6 +26,7 @@ exports.offerShipment = async (req, res) => {
         // Update the offer with the offer details
         const offer = await Offer.create({
             shipmentId,
+            shipperId,
             offerPrice,
             pickupDate,
             expectedDeliveryDate
@@ -94,19 +95,6 @@ exports.updateOffer = async (req, res) => {
     }
 };
 
-exports.getAllPendingModificationRequests = async (req, res) => {
-    try {
-        const modifications = await ShipmentModification.findAll({
-            where: { status: 'pending' },
-            include: [{ model: Shipment, as: 'shipment' }]
-        });
-        res.status(200).json({ modifications });
-    } catch (error) {
-        console.error('Error fetching requested modifications:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
 //for shipper to review offer/ accept or reject it
 exports.respondToOffer = async (req, res) => {
   try {
@@ -124,7 +112,7 @@ exports.respondToOffer = async (req, res) => {
     }
 
     // Make sure the offer belongs to this shipper
-    if (offer.Shipment.shipperId !== shipperId) {
+    if (offer.shipperId !== shipperId) {
       return res.status(403).json({ message: 'Unauthorized to respond to this offer' });
     }
 
@@ -176,3 +164,27 @@ exports.respondToOffer = async (req, res) => {
   }
 };
 
+//get for shipper to fetch all offers
+exports.getOffersForShipper = async (req, res) => {
+  try {
+    const shipperId = req.user.shipperId; // from JWT
+
+    if (!shipperId) {
+      return res.status(400).json({ message: 'Shipper ID is required' });
+    }
+
+    const offers = await Offer.findAll({
+      where: { shipperId },
+      include: [{ model: Shipment, as: 'shipment' }],
+    });
+
+    if (!offers || offers.length === 0) {
+      return res.status(404).json({ message: 'No offers found for this shipper' });
+    }
+
+    res.status(200).json({ offers });
+  } catch (error) {
+    console.error('Error fetching offers for shipper:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

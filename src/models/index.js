@@ -12,9 +12,6 @@ Shipper.hasMany(Shipment, { foreignKey: 'shipperId', as: 'shipments' });
 Offer.belongsTo(Shipment, { foreignKey: 'shipmentId', as: 'shipment' });
 Shipment.hasOne(Offer, { foreignKey: 'shipmentId', as: 'offer' });
 
-//Modification model associations with shipment
-Shipment.hasOne(ShipmentModification, { foreignKey: 'shipmentId', as: 'modifications' });
-ShipmentModification.belongsTo(Shipment, { foreignKey: 'shipmentId', as: 'shipment' });
 
 const models = {
   ShipmentModification,

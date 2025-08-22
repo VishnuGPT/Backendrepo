@@ -7,6 +7,15 @@ const ShipmentModification = sequelize.define('ShipmentModification', {
         primaryKey: true,
         autoIncrement: true
     },
+    shipperId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'shippers',
+            key: 'id'
+        },
+        field: 'shipper_id'
+    },
     shipmentId: {
         type: DataTypes.INTEGER,
         allowNull: false,

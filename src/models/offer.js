@@ -15,6 +15,14 @@ const Offer = sequelize.define('Offer', {
             key: 'id'
         }
     },
+    shipperId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'shippers',
+            key: 'id'
+        }
+    },
     offerPrice: {
         type: DataTypes.FLOAT,
         allowNull: false

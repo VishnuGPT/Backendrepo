@@ -6,6 +6,9 @@ const sequelize = require('./config/database');
 const shipperRoutes = require('./routes/shipperRoutes');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const shipmentRoutes = require('./routes/shipmentRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const offerRoutes = require('./routes/offerRoutes');
+const shipmentModificationRoutes = require('./routes/shipmentModificationRoutes')
 
 const cors = require('cors');
 
@@ -37,6 +40,9 @@ app.get('/', (req, res) => {
 app.use('/api/validate', validationRoutes);
 app.use('/api/shipper', shipperRoutes);
 app.use('/api/shipment', shipmentRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/offer', offerRoutes);
+app.use('/api/modification', shipmentModificationRoutes);
 
 
 // Error handling middleware
