@@ -1,7 +1,7 @@
 const Shipment = require('../models/shipment');
 const Admin = require('../models/admin');
 const ShipmentModification = require('../models/shipmentModification');
-const sendEmail = require('../utils/sendEmail');
+const sendEmail = require('../utils/helperUtils');
 const { Offer } = require('../models');
 
 //Modification request from shipper only when shipment status is REQUESTED or OFFER_SENT

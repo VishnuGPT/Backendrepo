@@ -1,8 +1,7 @@
-import Shipment from '../models/shipment';
-import Offer from '../models/offer';
-import sendEmail from '../utils/sendEmail'; 
-import Admin from '../models/admin'
-
+const Shipment = require('../models/shipment')
+const Offer = require('../models/offer')
+const Admin = require('../models/admin')
+const {sendEmail} = require('../utils/helperUtils')
 //for admin to offer shipment
 exports.offerShipment = async (req, res) => {
     try {

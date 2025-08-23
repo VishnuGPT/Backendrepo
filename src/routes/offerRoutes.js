@@ -1,5 +1,7 @@
-import { protectAdmin, protectShipper } from "../middleware/authMiddleware";
-import offerController from '../controllers/offerController.js';
+const {protectAdmin, protectShipper}  = require("../middleware/authMiddleware")
+const offerController = require('../controllers/offerController.js')
+const express = require('express');
+const router = express.Router();
 
 // Offer Routes
 
@@ -14,3 +16,4 @@ router.post('/offer/respond', protectShipper, offerController.respondToOffer);
 
 //shipper route to get all offers
 router.get('/shipper', protectShipper, offerController.getOffersForShipper);
+module.exports = router;

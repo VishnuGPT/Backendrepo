@@ -1,10 +1,5 @@
-import Admin from '../models/admin';
-import jwt from 'jsonwebtoken';
-import Shipment from '../models/shipment';
-import Offer from '../models/offer';
-import sendEmail from '../utils/sendEmail'; 
-import { ShipmentModification } from '../models';
-import Shipper from '../models/shipper';
+const Admin = require( '../models/admin');
+const jwt = require('jsonwebtoken');
 
 exports.SignIn = async (req, res) => {
     const body = req.body;
