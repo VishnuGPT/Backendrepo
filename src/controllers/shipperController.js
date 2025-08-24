@@ -1,5 +1,7 @@
+const { appendFile } = require('fs');
 const { Shipper } = require('../models');
 const jwt = require('jsonwebtoken');
+const router = require('../routes/validationRoutes');
 
 // Validation function for shipper registration
 const validateShipperRegistration = async (req) => {
@@ -201,43 +203,14 @@ exports.getHome = async (req, res) => {
 };
 
 
-exports.selectApplication= async (req, res) => {
-  try {
-    const { applicationId } = req.body;
-
-    // Validate required fields
-    if (!applicationId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Application ID is required',
-      });
-    }
-
-    // Find the application by ID
-    const application = await Application.findOne({ where: { id: applicationId } });
-
-    if (!application) {
-      return res.status(404).json({
-        success: false,
-        message: 'Application not found',
-      });
-    }
-
-    // Update the application status to 'selected'
-    application.status = 'selected';
-    await application.save();
-
+exports.verifyShipper = async (req, res) => {
+  const shipper =await Shipper.findByPk(req.user.shipperId, { attributes: { exclude: ['password'] } });
+  console.log(shipper)
+  console.log('hello')
     return res.status(200).json({
       success: true,
-      message: 'Application selected successfully',
-      data: application,
+      shipperProfile: shipper,
+      message: 'Shipper is authenticated',
     });
-  } catch (error) {
-    console.error('Error selecting application:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error selecting application',
-      error: error.message,
-    });
-  }
+  
 };

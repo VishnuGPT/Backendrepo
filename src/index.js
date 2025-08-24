@@ -29,8 +29,7 @@ app.use(cors({
   credentials: true,
 })); // Enable CORS for all routes
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-
+app.use(express.urlencoded({ extended: true }));
 // Routes
 app.get('/', (req, res) => {
   res.status(200).send('Ultron backend works fine 💥');

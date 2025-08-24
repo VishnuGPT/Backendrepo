@@ -1,8 +1,18 @@
 const Shipment = require('../models/shipment');
 const Admin = require('../models/admin');
 const ShipmentModification = require('../models/shipmentModification');
-const {sendEmail} = require('../utils/helperUtils');
+const { sendEmail } = require('../utils/helperUtils');
 const { Offer } = require('../models');
+const Shipper = require('../models/shipper')
+
+// Dummy uploader (simulates multer + AWS S3 upload)
+const dummyUploadToS3 = async (file) => {
+  if (!file) return null;
+
+  // Pretend we uploaded it to S3 and return a fake URL
+  const fakeUrl = `https://dummy-s3-bucket.s3.amazonaws.com/eway-bills/${Date.now()}_${file.originalname || "ewaybill.pdf"}`;
+  return fakeUrl;
+};
 
 // Create a new shipment
 exports.createShipment = async (req, res) => {
@@ -22,8 +32,8 @@ exports.createShipment = async (req, res) => {
       length,
       width,
       height,
-      expectedPickup,
-      expectedDelivery,
+      expectedPickupDate,
+      expectedDeliveryDate,
       transportMode,
       shipmentType,
       bodyType,
@@ -45,8 +55,8 @@ exports.createShipment = async (req, res) => {
       "dropPincode",
       "materialType",
       "weight",
-      "expectedPickup",
-      "expectedDelivery",
+      "expectedPickupDate",
+      "expectedDeliveryDate",
       "shipmentType",
       "bodyType",
       "materialValue",
@@ -60,6 +70,22 @@ exports.createShipment = async (req, res) => {
       });
     }
 
+    // Conditional checks
+    if (materialType === "custom" && !customMaterialType) {
+      return res.status(400).json({
+        success: false,
+        message: "customMaterialType is required when materialType is custom",
+      });
+    }
+
+    if (manpower === "yes" && !noOfLabours) {
+      return res.status(400).json({
+        success: false,
+        message: "noOfLabours is required when manpower is yes",
+      });
+    }
+
+    // Check shipper
     const shipperId = req.user?.shipperId;
     if (!shipperId) {
       return res
@@ -67,9 +93,19 @@ exports.createShipment = async (req, res) => {
         .json({ success: false, message: "Unauthorized: Shipper ID not found." });
     }
 
-    // handle file upload
-    const ebayBillUrl = req.file ? req.file.path : null;
+    // Dummy file upload (ewayBill PDF)
+    let ewayBillUrl = null;
+    if (req.file) {
+      ewayBillUrl = await dummyUploadToS3(req.file);
+    }
+    const date1 = new Date(expectedPickupDate); //2025-08-23T00:00:00.000Z
+    const formattedExpectedPickupDate = date1.toISOString().split("T")[0]; // 2025-08-23
 
+    const date2 = new Date(expectedDeliveryDate);
+    const formattedExpectedDeliveryDate = date2.toISOString().split("T")[0];
+
+
+    // Create new shipment
     const newShipment = await Shipment.create({
       shipperId,
       pickupAddressLine1,
@@ -80,27 +116,26 @@ exports.createShipment = async (req, res) => {
       dropAddressLine2,
       dropState,
       dropPincode,
-      expectedPickupDate: expectedPickup,
-      expectedDeliveryDate: expectedDelivery,
+      expectedPickupDate: formattedExpectedPickupDate,
+      expectedDeliveryDate: formattedExpectedDeliveryDate,
       materialType,
-      customMaterialType, // when selected custom in materialType selected field
+      customMaterialType: materialType === "Others" ? customMaterialType : null,
       weightKg: weight,
       lengthFt: length,
       widthFt: width,
       heightFt: height,
-      transportMode, 
+      transportMode,
       shipmentType,
       bodyType,
-      truckSize, 
-      manpowerRequired: manpower, // "yes" / "no"
-      noOfLabours, //when manpower is "yes"
-      coolingType,
-      materialValueInr: materialValue,
+      truckSize,
+      manpower,
+      noOfLabours: manpower === "yes" ? noOfLabours : null,
+      coolingType: bodyType == "Closed" ? coolingType : null,
+      materialValue,
       additionalNotes,
-      ebayBillUrl,
+      ewayBill: ewayBillUrl, // dummy URL if provided
     });
-
-    // async notify admins
+    // Notify admins
     Admin.findAll()
       .then((admins) => {
         admins.forEach((admin) => {
@@ -115,6 +150,7 @@ exports.createShipment = async (req, res) => {
         console.error("Failed to send admin notifications:", err)
       );
 
+
     return res.status(201).json({
       success: true,
       message: "Shipment request created successfully!",
@@ -128,8 +164,9 @@ exports.createShipment = async (req, res) => {
     });
   }
 };
+
 // Get all shipments for a specific shipper
-exports.getAllShipmentsForShipper = async(req,res)=>{
+exports.getAllShipmentsForShipper = async (req, res) => {
   try {
     const shipperId = req.user.shipperId;
 
@@ -142,7 +179,7 @@ exports.getAllShipmentsForShipper = async(req,res)=>{
     });
 
     if (!shipments || shipments.length === 0) {
-      return res.status(404).json({ message: 'No shipments found for this shipper' });
+      return res.status(200).json({ message: 'No shipments found for this shipper' });
     }
 
     res.status(200).json({ shipments });
@@ -151,3 +188,28 @@ exports.getAllShipmentsForShipper = async(req,res)=>{
     res.status(500).json({ message: 'Internal server error' });
   }
 }
+
+exports.getAllShipmentsForAdmin = async (req, res) => {
+  try {
+    // Ensure only admin can access
+    if (!req.user || req.user.userType !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Only admins can perform this action",
+      });
+    }
+
+    const shipments = await Shipment.findAll({
+      include: [{ model: Shipper, as: 'shipper', attributes: { exclude: ['createdAt','password','updatedAt'] } }]
+    });
+
+    if (!shipments || shipments.length === 0) {
+      return res.status(200).json({ message: 'No shipments found' });
+    }
+
+    res.status(200).json({ shipments });
+  } catch (error) {
+    console.error('Error fetching shipments for admin:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

@@ -71,12 +71,12 @@ const ShipmentModification = sequelize.define('ShipmentModification', {
 
     // --- Schedule ---
     expectedPickupDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.STRING,
       allowNull: false,
       field: "expected_pickup_date",
     },
     expectedDeliveryDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.STRING,
       allowNull: false,
       field: "expected_delivery_date",
     },

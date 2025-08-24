@@ -10,6 +10,7 @@ router.post('/register', shipperController.registerShipper);
 // POST route for shipper login
 router.post('/login', shipperController.loginShipper);
 
+router.get('/verify',protectShipper, shipperController.verifyShipper);
 // Protected routes (requires authentication)
 // GET route for protected home page
 router.get('/home', protectShipper, shipperController.getHome);

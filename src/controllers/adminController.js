@@ -27,3 +27,14 @@ exports.SignIn = async (req, res) => {
 
 
 
+exports.verifyAdmin = async (req, res) => {
+  const admin = await Admin.findByPk(req.user.id, { attributes: { exclude: ['password'] } });
+  console.log(admin)
+  console.log('HelloAdmin')
+    return res.status(200).json({
+      success: true,
+      adminProfile: admin,
+      message: 'Admin is authenticated',
+    });
+  
+};

@@ -27,12 +27,12 @@ const Offer = sequelize.define('Offer', {
         type: DataTypes.FLOAT,
         allowNull: false
     },
-    pickupDate: {
-        type: DataTypes.DATE,
+    expectedPickupDate: {
+        type: DataTypes.STRING,
         allowNull: false
     },
     expectedDeliveryDate: {
-        type: DataTypes.DATE,
+        type: DataTypes.STRING,
         allowNull: false
     },
     status: {

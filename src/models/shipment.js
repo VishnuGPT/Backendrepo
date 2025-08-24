@@ -66,12 +66,12 @@ const Shipment = sequelize.define(
 
     // --- Schedule ---
     expectedPickupDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.STRING,
       allowNull: false,
       field: "expected_pickup_date",
     },
     expectedDeliveryDate: {
-      type: DataTypes.DATE,
+      type: DataTypes.STRING,
       allowNull: false,
       field: "expected_delivery_date",
     },
@@ -149,10 +149,10 @@ const Shipment = sequelize.define(
     },
 
     // --- Attachments ---
-    ebayBill: {
+    ewayBill: {
       type: DataTypes.STRING,
       allowNull: true,
-      field: "ebay_bill",
+      field: "eway_bill",
     },
 
     // --- Status & Cost ---
@@ -163,7 +163,6 @@ const Shipment = sequelize.define(
         "CONFIRMED",
         "REJECTED",
         "MODIFICATION_REQUESTED",
-        "IN_TRANSIT",
         "COMPLETED"
       ),
       defaultValue: "REQUESTED",

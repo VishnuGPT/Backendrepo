@@ -1,7 +1,8 @@
 const Shipment = require('../models/shipment');
 const Admin = require('../models/admin');
 const ShipmentModification = require('../models/shipmentModification');
-const sendEmail = require('../utils/helperUtils');
+const Shipper = require('../models/shipper')
+const { sendEmail } = require('../utils/helperUtils');
 const { Offer } = require('../models');
 
 //Modification request from shipper only when shipment status is REQUESTED or OFFER_SENT
@@ -83,55 +84,60 @@ exports.requestModification = async (req, res) => {
                     message: "A pending modification request already exists",
                 });
             }
-            ShipmentModification.create({
-                    shipmentId,
-                    shipperId: modifiedBy,
-                    pickupAddressLine1,
-                    pickupAddressLine2,
-                    pickupState,
-                    pickupPincode,
-                    dropAddressLine1,
-                    dropAddressLine2,
-                    dropState,
-                    dropPincode,
-                    expectedPickupDate,
-                    expectedDeliveryDate,
-                    materialType,
-                    customMaterialType,
-                    weightKg,
-                    lengthFt,
-                    widthFt,
-                    heightFt,
-                    truckSize,
-                    shipmentType,
-                    transportMode,
-                    bodyType,
-                    manpower,
-                    coolingType,
-                    noOfLabours,
-                    materialValue,
-                    additionalNotes,
-                    changeReason
-                });
+            const date1 = new Date(expectedPickupDate); //2025-08-23T00:00:00.000Z
+            const formattedExpectedPickupDate = date1.toISOString().split("T")[0]; // 2025-08-23
+
+            const date2 = new Date(expectedDeliveryDate);
+            const formattedExpectedDeliveryDate = date2.toISOString().split("T")[0];
+
+            await ShipmentModification.create({
+                shipmentId,
+                shipperId: modifiedBy,
+                pickupAddressLine1,
+                pickupAddressLine2,
+                pickupState,
+                pickupPincode,
+                dropAddressLine1,
+                dropAddressLine2,
+                dropState,
+                dropPincode,
+                expectedPickupDate: formattedExpectedPickupDate,
+                expectedDeliveryDate: formattedExpectedDeliveryDate,
+                materialType,
+                customMaterialType: materialType === "Others" ? customMaterialType : null,
+                weightKg: weightKg,
+                lengthFt: lengthFt,
+                widthFt: widthFt,
+                heightFt: heightFt,
+                transportMode,
+                shipmentType,
+                bodyType,
+                truckSize,
+                manpower,
+                noOfLabours: manpower === "yes" ? noOfLabours : null,
+                coolingType: bodyType == "Closed" ? coolingType : null,
+                materialValue,
+                additionalNotes,
+                changeReason
+            });
 
             //change shipment status to Modification Requested
             shipment.status = "MODIFICATION_REQUESTED";
             await shipment.save();
 
-            // 5. Notify admins
-            const admins = await Admin.findAll();
-            admins.forEach((admin) => {
-                sendEmail({
-                    to: admin.email,
-                    subject: "Shipment Modification Requested",
-                    html: `A modification request has been submitted for Shipment ID: ${ShipmentId}<br>`,
-                });
-            });
-
+            Admin.findAll()
+                .then((admins) => {
+                    admins.forEach((admin) => {
+                        sendEmail({
+                            to: admin.email,
+                            subject: "Shipment Modification Requested",
+                            html: `A modification request has been submitted for Shipment ID: ${shipmentId}<br>`,
+                        });
+                    });
+                })
             return res.status(201).json({
                 success: true,
                 message: "Modification request submitted successfully",
-                data: modification,
             });
         } else {
             return res.status(400).json({
@@ -149,7 +155,6 @@ exports.requestModification = async (req, res) => {
 };
 
 
-// FOR ADMIN TO REVIEW MODIFICATION REQUEST
 exports.reviewModificationRequest = async (req, res) => {
     try {
         const { requestId, action } = req.body; // modification request ID + action ("accept" or "reject")
@@ -163,8 +168,7 @@ exports.reviewModificationRequest = async (req, res) => {
         }
 
         // Find the modification request
-        const modification = await ShipmentModification.findByPk({ id: requestId });
-
+        const modification = await ShipmentModification.findOne({ where: { id: requestId } });
         if (!modification) {
             return res.status(404).json({
                 success: false,
@@ -172,7 +176,7 @@ exports.reviewModificationRequest = async (req, res) => {
             });
         }
 
-        // Fetch shipment + shipper info
+        // Fetch shipment with shipper info
         const shipment = await Shipment.findByPk(modification.shipmentId, {
             include: [{ model: Shipper, as: "shipper" }],
         });
@@ -193,8 +197,7 @@ exports.reviewModificationRequest = async (req, res) => {
         }
 
         if (action === "accept") {
-
-            Shipment.update({
+            shipment.set({
                 pickupAddressLine1: modification.pickupAddressLine1,
                 pickupAddressLine2: modification.pickupAddressLine2,
                 pickupState: modification.pickupState,
@@ -219,11 +222,10 @@ exports.reviewModificationRequest = async (req, res) => {
                 coolingType: modification.coolingType,
                 noOfLabours: modification.noOfLabours,
                 materialValue: modification.materialValue,
-                additionalNotes: modification.additionalNotes   
-            })
+                additionalNotes: modification.additionalNotes,
+            });
 
-            // Apply the "new" values from changedFields
-            //Restore shipment status based on whether an offer exists
+            // Restore shipment status based on whether an offer exists
             const offer = await Offer.findOne({ where: { shipmentId: shipment.id } });
             shipment.status = offer ? "OFFER_SENT" : "REQUESTED";
             await shipment.save();
@@ -231,15 +233,17 @@ exports.reviewModificationRequest = async (req, res) => {
             // Update modification record
             await modification.update({
                 status: "accepted",
-                resolved: true, // boolean, not string
+                resolved: true,
             });
 
             // Notify shipper
-            sendEmail({
-                to: shipment.shipper.email,
-                subject: "Shipment Modification Accepted",
-                html: `Your modification request for Shipment ID: ${shipment.id} has been <b>accepted</b>.<br>`,
-            });
+            if (shipment.shipper?.email) {
+                sendEmail({
+                    to: shipment.shipper.email,
+                    subject: "Shipment Modification Accepted",
+                    html: `<p>Your modification request for Shipment ID: ${shipment.id} has been <b>accepted</b>.</p>`,
+                });
+            }
 
             return res.status(200).json({
                 success: true,
@@ -255,11 +259,13 @@ exports.reviewModificationRequest = async (req, res) => {
                 resolved: true,
             });
 
-            sendEmail({
-                to: shipment.shipper.email,
-                subject: "Shipment Modification Rejected",
-                html: `Your modification request for Shipment ID: ${shipment.id} has been <b>rejected</b>.<br>`,
-            });
+            if (shipment.shipper?.email) {
+                sendEmail({
+                    to: shipment.shipper.email,
+                    subject: "Shipment Modification Rejected",
+                    html: `<p>Your modification request for Shipment ID: ${shipment.id} has been <b>rejected</b>.</p>`,
+                });
+            }
 
             return res.status(200).json({
                 success: true,
@@ -290,7 +296,7 @@ exports.getAllModificationsForAShipper = async (req, res) => {
         }
 
         const modifications = await ShipmentModification.findAll({ where: { shipperId } });
-        if(modifications.length === 0){
+        if (modifications.length === 0) {
             return res.status(404).json({ success: false, message: "No modification requests found for this shipper." });
         }
         return res.status(200).json({
@@ -309,7 +315,7 @@ exports.getAllModificationsForAShipper = async (req, res) => {
 //Admin route to fetch all modification requests
 exports.getAllModificationsRequests = async (req, res) => {
     try {
-        if (!req.user || !req.user.isAdmin) {
+        if (req.user.userType !== 'admin') {
             return res.status(403).json({ success: false, message: "Forbidden: Admin access required." });
         }
 
