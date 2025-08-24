@@ -15,7 +15,7 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = ['http://localhost:3000', 'https://logixjunction.com/', 'http://localhost:5173'];
+const allowedOrigins = ['http://localhost:3000', 'https://logixjunction.com/', 'http://localhost:5173','https://logix-frontend-sigma.vercel.app'];
 
 // Middleware
 app.use(cors({
