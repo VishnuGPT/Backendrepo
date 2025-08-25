@@ -319,13 +319,23 @@ exports.getAllModificationsRequests = async (req, res) => {
             return res.status(403).json({ success: false, message: "Forbidden: Admin access required." });
         }
 
-        const modifications = await ShipmentModification.findAll();
+        const modifications = await ShipmentModification.findAll({
+            include: [
+                {
+                    model: Shipper,
+                    as: "shipper",
+                    attributes: { exclude: ["password"] } 
+                },
+            ],
+        });
+
         if (modifications.length === 0) {
             return res.status(404).json({ success: false, message: "No modification requests found." });
         }
+
         return res.status(200).json({
             success: true,
-            modifications
+            modifications,
         });
     } catch (error) {
         console.error("Error fetching modifications:", error);
