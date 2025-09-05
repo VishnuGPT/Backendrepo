@@ -2,6 +2,8 @@ const Shipper = require('./shipper');
 const Shipment = require('./shipment');
 const Admin = require('./admin')
 const Offer = require('./offer');
+const Payment = require('./payment');
+const ShipmentProgress = require('./shipmentProgress')
 const ShipmentModification = require('./shipmentModification');
 
 // Shipment model associations with shipper
@@ -25,6 +27,8 @@ const models = {
   Shipment,
   Admin,
   Offer,
+  ShipmentProgress,
+  Payment
 };
 
 module.exports = models;

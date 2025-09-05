@@ -1,5 +1,5 @@
 const shipmentController = require('../controllers/shipmentController');
-const { protectShipper, protectAdmin } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 const multer = require("multer");
 const upload = multer(); // memory storage by default
 
@@ -7,11 +7,11 @@ const express = require('express');
 const router = express.Router();
 
 // POST route for creating a new shipment (Protected route)
-router.post('/create', protectShipper, upload.single("ewayBill"), shipmentController.createShipment);
+router.post('/create', protect, upload.single("ewayBill"), shipmentController.createShipment);
 
-router.get('/get-all-for-shipper', protectShipper, shipmentController.getAllShipmentsForShipper);
+router.get('/get-all-for-shipper', protect, shipmentController.getAllShipmentsForShipper);
 
 //Admin routes
-router.get('/get-all-for-admin', protectAdmin, shipmentController.getAllShipmentsForAdmin);
+router.get('/get-all-for-admin', protect, shipmentController.getAllShipmentsForAdmin);
 
 module.exports = router;

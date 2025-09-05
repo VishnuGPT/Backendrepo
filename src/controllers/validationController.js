@@ -84,6 +84,7 @@ exports.sendOtpToEmail = async (req, res) => {
   return res.status(200).json({ message: 'OTP sent to email successfully' });
 };
 
+
 //verify otp for email
 exports.verifyOtpForEmail = async (req, res) => {
   const { email, otp } = req.body;
@@ -106,6 +107,8 @@ exports.verifyOtpForEmail = async (req, res) => {
     return res.status(500).json({message: 'Error verifying OTP', error: err.message});
   }
 };
+
+
 
 // // Function to check if user is verified/ not verified/ not verified but an active token exist
 // exports.checkVerificationStatus = async (req, res) => {

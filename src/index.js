@@ -9,6 +9,8 @@ const shipmentRoutes = require('./routes/shipmentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const offerRoutes = require('./routes/offerRoutes');
 const shipmentModificationRoutes = require('./routes/shipmentModificationRoutes')
+const paymentRoutes = require('./routes/paymentRoutes')
+const shipmentProgress= require('./routes/shipmentProgressRoutes')
 
 const cors = require('cors');
 
@@ -42,7 +44,8 @@ app.use('/api/shipment', shipmentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/offer', offerRoutes);
 app.use('/api/modification', shipmentModificationRoutes);
-
+app.use('/api/payment', paymentRoutes);
+app.use('/api/progress', shipmentProgress);
 
 // Error handling middleware
 app.use(notFound);

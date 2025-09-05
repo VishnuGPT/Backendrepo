@@ -3,6 +3,7 @@ const Offer = require('../models/offer');
 const Admin = require('../models/admin');
 const Shipper = require('../models/shipper'); // make sure this is imported
 const { sendEmail } = require('../utils/helperUtils');
+const ShipmentProgress = require('../models/shipmentProgress');
 
 // Admin creates a new offer for a shipment
 exports.offerShipment = async (req, res) => {
@@ -13,7 +14,7 @@ exports.offerShipment = async (req, res) => {
 
     const { shipmentId, offerPrice, expectedPickupDate, expectedDeliveryDate } = req.body;
 
-    if (!shipmentId || !offerPrice || !expectedPickupDate || !expectedDeliveryDate) {
+    if (!shipmentId || !offerPrice || !expectedPickupDate || !expectedDeliveryDate ) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
@@ -150,6 +151,18 @@ exports.respondToOffer = async (req, res) => {
       shipment.expectedPickupDate = offer.expectedPickupDate;
       shipment.expectedDeliveryDate = offer.expectedDeliveryDate;
       shipment.status = 'CONFIRMED';
+
+      const shipmentProgress = await ShipmentProgress.create({
+        shipmentId: shipment.id,
+        statusUpdates: [
+          {
+            id: 'Initial',
+            title: 'Offer Accepted',
+            description: `You have accepted the offer of ${offer.offerPrice} for SHID${shipment.id}`,
+            date: new Date(),
+          }
+        ]
+      });
       await shipment.save();
 
       const admins = await Admin.findAll();
@@ -202,12 +215,7 @@ exports.respondToOffer = async (req, res) => {
 // Shipper fetches all offers
 exports.getOffersForShipper = async (req, res) => {
   try {
-    const shipperId = req.user.shipperId;
-
-    if (!shipperId) {
-      return res.status(400).json({ message: 'Shipper ID is required' });
-    }
-
+    const shipperId = req.user.shipperId;    
     const offers = await Offer.findAll({
       where: { shipperId },
       include: [{ model: Shipment, as: 'shipment' }]
@@ -232,3 +240,4 @@ exports.getAllOffersForAdmin = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+

@@ -1,7 +1,6 @@
 const { appendFile } = require('fs');
 const { Shipper } = require('../models');
 const jwt = require('jsonwebtoken');
-const router = require('../routes/validationRoutes');
 
 // Validation function for shipper registration
 const validateShipperRegistration = async (req) => {
@@ -75,8 +74,6 @@ exports.registerShipper = async (req, res) => {
     }
     
     console.log('Input validation passed');
-
-
     // Extract required fields from request body
     const {
       ownerName,

@@ -34,8 +34,9 @@ sequelize.authenticate()
     const syncOptions = process.env.NODE_ENV === 'production' 
       ? { alter: false } 
       : { alter: true };
-    
-    return sequelize.sync({ force: true });
+
+      return sequelize.sync({ alter : true}); //remove --> new table
+     // existing table--> schema, new table--> create it
   })
   .then(() => {
     console.log('Database schema synchronized!');
