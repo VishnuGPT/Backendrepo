@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const {getUserModel,sendEmail} = require('../utils/helperUtils');
 const axios = require('axios');
+const Shipper = require('../models/shipper');
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -70,6 +71,15 @@ exports.sendOtpToEmail = async (req, res) => {
   if (!email) {
     return res.status(400).json({ message: 'Email is required' });
   }
+  const existingEmail = await Shipper.findOne({ where: { email } });
+  if (existingEmail) {
+    return res.status(400).json({ message: 'Email is already registered' });
+  }
+  // Check if an OTP already exists
+  const existingOtp = await redisClient.get(`${email}_emailOtp`);
+  if (existingOtp) {
+    return res.status(429).json({ message: 'OTP already sent. Please wait before requesting another.' });
+  }
 
   const otp = generateOtp();
   await redisClient.set(`${email}_emailOtp`, otp, { EX: 120 });
@@ -99,8 +109,11 @@ exports.verifyOtpForEmail = async (req, res) => {
       return res.status(400).json({message: "OTP has expired"});
     }
     if (cachedOtp === otp) {
-      return res.json({message: 'OTP verified successfully'});
-    } else {
+      const emailVerifiedToken= jwt.sign({email}, process.env.JWT_SECRET, {expiresIn: '10m'});
+      await redisClient.del(`${email}_emailOtp`);
+      return res.json({message: 'OTP verified successfully', token: emailVerifiedToken});
+    }
+     else {
       return res.status(401).json({message: 'Invalid OTP'});
     }
   } catch (err) {

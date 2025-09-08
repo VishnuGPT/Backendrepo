@@ -86,8 +86,26 @@ exports.registerShipper = async (req, res) => {
       gstNumber
     } = req.body;
 
-    // Create new shipper
-    // Note: Password encryption is handled by the beforeCreate hook in the Shipper model
+    //check email verification jwt token
+    const emailVerifiedToken = req.headers.emailverificationtoken;
+
+    if (!emailVerifiedToken) {
+      return res.status(401).json({ message: 'Email verification token is required' });
+    }
+    let decoded
+
+    try {
+      decoded = jwt.verify(emailVerifiedToken, process.env.JWT_SECRET);
+      if (!decoded.email) {
+        return res.status(401).json({ message: 'Invalid email verification token' });
+      }
+    } catch (error) {
+      return res.status(401).json({ message: 'Invalid email verification token' });
+    }
+    if(decoded.email !== email){
+      return res.status(401).json({ message: 'Email does not match the verified email' });
+    }
+
     const newShipper = await Shipper.create({
       ownerName,
       ownerContactNumber,

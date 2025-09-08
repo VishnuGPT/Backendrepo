@@ -184,7 +184,9 @@ exports.respondToOffer = async (req, res) => {
 
     } else if (action === 'reject') {
       offer.status = 'REJECTED';
+      shipment.status = 'REQUESTED';
       await offer.save();
+      await shipment.save();
 
       const admins = await Admin.findAll();
       await Promise.all(

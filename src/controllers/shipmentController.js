@@ -5,6 +5,36 @@ const { sendEmail } = require('../utils/helperUtils');
 const { Offer } = require('../models');
 const Shipper = require('../models/shipper')
 
+
+
+
+// Helper function to format shipment details as HTML
+const formatShipmentDetails = (shipment) => {
+  return `
+    <h3>Shipment Details</h3>
+    <ul style="list-style: none; padding: 0;">
+      <li><strong>Shipment ID:</strong> ${shipment.id}</li>
+      <li><strong>Shipper ID:</strong> ${shipment.shipperId}</li>
+      <li><strong>Pickup Address:</strong> ${shipment.pickupAddressLine1}, ${shipment.pickupAddressLine2 || ''}, ${shipment.pickupState} - ${shipment.pickupPincode}</li>
+      <li><strong>Drop Address:</strong> ${shipment.dropAddressLine1}, ${shipment.dropAddressLine2 || ''}, ${shipment.dropState} - ${shipment.dropPincode}</li>
+      <li><strong>Expected Pickup Date:</strong> ${shipment.expectedPickupDate}</li>
+      <li><strong>Expected Delivery Date:</strong> ${shipment.expectedDeliveryDate}</li>
+      <li><strong>Material Type:</strong> ${shipment.materialType === 'Others' ? shipment.customMaterialType : shipment.materialType}</li>
+      <li><strong>Weight:</strong> ${shipment.weightKg} kg</li>
+      <li><strong>Dimensions:</strong> ${shipment.lengthFt || '-'} ft × ${shipment.widthFt || '-'} ft × ${shipment.heightFt || '-'} ft</li>
+      <li><strong>Transport Mode:</strong> ${shipment.transportMode || '-'}</li>
+      <li><strong>Shipment Type:</strong> ${shipment.shipmentType || '-'}</li>
+      <li><strong>Body Type:</strong> ${shipment.bodyType || '-'}</li>
+      <li><strong>Truck Size:</strong> ${shipment.truckSize || '-'}</li>
+      <li><strong>Manpower Required:</strong> ${shipment.manpower || 'No'}</li>
+      <li><strong>Number of Labourers:</strong> ${shipment.noOfLabours || '-'}</li>
+      <li><strong>Cooling Type:</strong> ${shipment.coolingType || '-'}</li>
+      <li><strong>Material Value:</strong> ₹${shipment.materialValue.toLocaleString('en-IN')}</li>
+      <li><strong>Additional Notes:</strong> ${shipment.additionalNotes || '-'}</li>
+    </ul>
+  `;
+};
+
 // Dummy uploader (simulates multer + AWS S3 upload)
 const dummyUploadToS3 = async (file) => {
   if (!file) return null;
@@ -136,19 +166,25 @@ exports.createShipment = async (req, res) => {
       ewayBill: ewayBillUrl, // dummy URL if provided
     });
     // Notify admins
+    // Notify admins
     Admin.findAll()
       .then((admins) => {
+        const shipmentDetailsHtml = formatShipmentDetails(newShipment);
         admins.forEach((admin) => {
           sendEmail({
             to: admin.email,
             subject: "New Shipment Request Received",
-            html: `A new shipment request (#${newShipment.id}) has been created by shipper #${shipperId}. Please review it in the admin panel.`,
+            html: `
+          <p>A new shipment request (#${newShipment.id}) has been created by shipper #${shipperId}. Please review it in the admin panel.</p>
+          ${shipmentDetailsHtml}
+        `,
           });
         });
       })
       .catch((err) =>
         console.error("Failed to send admin notifications:", err)
       );
+
 
 
     return res.status(201).json({
@@ -200,7 +236,7 @@ exports.getAllShipmentsForAdmin = async (req, res) => {
     }
 
     const shipments = await Shipment.findAll({
-      include: [{ model: Shipper, as: 'shipper', attributes: { exclude: ['createdAt','password','updatedAt'] } }]
+      include: [{ model: Shipper, as: 'shipper', attributes: { exclude: ['createdAt', 'password', 'updatedAt'] } }]
     });
 
     if (!shipments || shipments.length === 0) {
