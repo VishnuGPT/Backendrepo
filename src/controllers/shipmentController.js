@@ -135,7 +135,14 @@ exports.createShipment = async (req, res) => {
     const formattedExpectedDeliveryDate = date2.toISOString().split("T")[0];
 
 
-    // Create new shipment
+    const sanitizeNumber = (value) => {
+      if (value === '' || value == null) {
+        return null;
+      }
+      const number = parseFloat(value);
+      return isNaN(number) ? null : number;
+    };
+
     const newShipment = await Shipment.create({
       shipperId,
       pickupAddressLine1,
@@ -150,20 +157,20 @@ exports.createShipment = async (req, res) => {
       expectedDeliveryDate: formattedExpectedDeliveryDate,
       materialType,
       customMaterialType: materialType === "Others" ? customMaterialType : null,
-      weightKg: weight,
-      lengthFt: length,
-      widthFt: width,
-      heightFt: height,
+      weightKg: sanitizeNumber(weight),
+      lengthFt: sanitizeNumber(length),
+      widthFt: sanitizeNumber(width),
+      heightFt: sanitizeNumber(height),
       transportMode,
       shipmentType,
       bodyType,
       truckSize,
       manpower,
-      noOfLabours: manpower === "yes" ? noOfLabours : null,
+      noOfLabours: manpower === "yes" ? sanitizeNumber(noOfLabours) : null,
       coolingType: bodyType == "Closed" ? coolingType : null,
-      materialValue,
+      materialValue: sanitizeNumber(materialValue),
       additionalNotes,
-      ewayBill: ewayBillUrl, // dummy URL if provided
+      ewayBill: ewayBillUrl,
     });
     // Notify admins
     // Notify admins
