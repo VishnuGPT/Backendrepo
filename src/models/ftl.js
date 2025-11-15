@@ -1,31 +1,24 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
-const ShipmentModification = sequelize.define('ShipmentModification', {
+const Ftl = sequelize.define(
+  "Ftl",
+  {
     id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
     shipperId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: 'shippers',
-            key: 'id'
-        },
-        field: 'shipper_id'
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "shippers",
+        key: "id",
+      },
+      field: "shipper_id",
     },
-    shipmentId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-            model: 'shipments',
-            key: 'id'
-        },
-        field: 'shipment_id'
-    },
-        // --- Pickup Info ---
+    // --- Pickup Info ---
     pickupAddressLine1: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -80,7 +73,6 @@ const ShipmentModification = sequelize.define('ShipmentModification', {
       allowNull: false,
       field: "expected_delivery_date",
     },
-
     // --- Cargo Details ---
     materialType: {
       type: DataTypes.STRING,
@@ -97,22 +89,37 @@ const ShipmentModification = sequelize.define('ShipmentModification', {
       allowNull: false,
       field: "weight_kg",
     },
-    lengthFt: { type: DataTypes.FLOAT, allowNull: true, field: "length_ft" },
-    widthFt: { type: DataTypes.FLOAT, allowNull: true, field: "width_ft" },
-    heightFt: { type: DataTypes.FLOAT, allowNull: true, field: "height_ft" },
-
+    length: { type: DataTypes.FLOAT, allowNull: true, field: "length" },
+    width: { type: DataTypes.FLOAT, allowNull: true, field: "width" },
+    height: { type: DataTypes.FLOAT, allowNull: true, field: "height" },
+    volumetricWeightKg: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      field: "volumetric_weight_kg",
+    },
+    dimension: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    vehicleType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    smallVehicleType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "small_vehicle_type",
+    },
     materialValue: {
       type: DataTypes.FLOAT,
-      allowNull: false,
+      allowNull: true,
       field: "material_value",
     },
-
     additionalNotes: {
       type: DataTypes.TEXT,
       allowNull: true,
       field: "additional_notes",
     },
-
     // --- Logistics ---
     transportMode: {
       type: DataTypes.STRING,
@@ -139,7 +146,6 @@ const ShipmentModification = sequelize.define('ShipmentModification', {
       allowNull: true,
       field: "cooling_type",
     },
-
     manpower: {
       type: DataTypes.ENUM("yes", "no"),
       allowNull: true,
@@ -152,39 +158,31 @@ const ShipmentModification = sequelize.define('ShipmentModification', {
       defaultValue: 0,
       field: "no_of_labours",
     },
-
-    resolved: {
-        type: DataTypes.ENUM('true', 'false'),
-        defaultValue: 'false',
-        allowNull: false,
-        field: 'resolved'
-    },
+    // --- Status & Cost ---
     status: {
-        type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
-        defaultValue: 'pending',
-        allowNull: false,
-        field: 'status'
+      type: DataTypes.ENUM(
+        "REQUESTED",
+        "OFFER_SENT",
+        "CONFIRMED",
+        "REJECTED",
+        "MODIFICATION_REQUESTED",
+        "COMPLETED"
+      ),
+      defaultValue: "REQUESTED",
+      allowNull: false,
     },
-    changeReason: {
-        type: DataTypes.STRING ,
-        allowNull: true,
-        field: 'change_reason'
+    cost: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      field: "cost",
     },
-    createdAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        allowNull: false,
-        field: 'created_at'
-    },
-    updatedAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        allowNull: false,
-        field: 'updated_at'
-    }
-}, {
-    tableName: 'shipment_modifications',
-    timestamps: true
-});
+  },
+  {
+    tableName: "ftl",
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  }
+);
 
-module.exports = ShipmentModification;
+module.exports = Ftl;

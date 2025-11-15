@@ -19,7 +19,6 @@ const Shipment = sequelize.define(
       },
       field: "shipper_id",
     },
-
     // --- Pickup Info ---
     pickupAddressLine1: {
       type: DataTypes.STRING,
@@ -75,7 +74,6 @@ const Shipment = sequelize.define(
       allowNull: false,
       field: "expected_delivery_date",
     },
-
     // --- Cargo Details ---
     materialType: {
       type: DataTypes.STRING,
@@ -92,22 +90,37 @@ const Shipment = sequelize.define(
       allowNull: false,
       field: "weight_kg",
     },
-    lengthFt: { type: DataTypes.FLOAT, allowNull: true, field: "length_ft" },
-    widthFt: { type: DataTypes.FLOAT, allowNull: true, field: "width_ft" },
-    heightFt: { type: DataTypes.FLOAT, allowNull: true, field: "height_ft" },
-
+    length: { type: DataTypes.FLOAT, allowNull: true, field: "length" },
+    width: { type: DataTypes.FLOAT, allowNull: true, field: "width" },
+    height: { type: DataTypes.FLOAT, allowNull: true, field: "height" },
+    volumetricWeightKg: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      field: "volumetric_weight_kg",
+    },
+    dimension: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    vehicleType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    smallVehicleType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: "small_vehicle_type",
+    },
     materialValue: {
       type: DataTypes.FLOAT,
-      allowNull: false,
+      allowNull: true,
       field: "material_value",
     },
-
     additionalNotes: {
       type: DataTypes.TEXT,
       allowNull: true,
       field: "additional_notes",
     },
-
     // --- Logistics ---
     transportMode: {
       type: DataTypes.STRING,
@@ -134,7 +147,6 @@ const Shipment = sequelize.define(
       allowNull: true,
       field: "cooling_type",
     },
-
     manpower: {
       type: DataTypes.ENUM("yes", "no"),
       allowNull: true,
@@ -147,14 +159,6 @@ const Shipment = sequelize.define(
       defaultValue: 0,
       field: "no_of_labours",
     },
-
-    // --- Attachments ---
-    ewayBill: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      field: "eway_bill",
-    },
-
     // --- Status & Cost ---
     status: {
       type: DataTypes.ENUM(

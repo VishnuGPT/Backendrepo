@@ -35,15 +35,6 @@ const formatShipmentDetails = (shipment) => {
   `;
 };
 
-// Dummy uploader (simulates multer + AWS S3 upload)
-const dummyUploadToS3 = async (file) => {
-  if (!file) return null;
-
-  // Pretend we uploaded it to S3 and return a fake URL
-  const fakeUrl = `https://dummy-s3-bucket.s3.amazonaws.com/eway-bills/${Date.now()}_${file.originalname || "ewaybill.pdf"}`;
-  return fakeUrl;
-};
-
 // Create a new shipment
 exports.createShipment = async (req, res) => {
   try {
@@ -59,14 +50,18 @@ exports.createShipment = async (req, res) => {
       materialType,
       customMaterialType,
       weight,
+      volumetricWeight,
       length,
       width,
       height,
+      dimension,
       expectedPickupDate,
       expectedDeliveryDate,
       transportMode,
       shipmentType,
       bodyType,
+      vehicleType,
+      smallVehicleType,
       truckSize,
       manpower,
       noOfLabours,
@@ -89,7 +84,6 @@ exports.createShipment = async (req, res) => {
       "expectedDeliveryDate",
       "shipmentType",
       "bodyType",
-      "materialValue",
     ];
 
     const missingField = requiredFields.find((field) => !req.body[field]);
@@ -123,11 +117,6 @@ exports.createShipment = async (req, res) => {
         .json({ success: false, message: "Unauthorized: Shipper ID not found." });
     }
 
-    // Dummy file upload (ewayBill PDF)
-    let ewayBillUrl = null;
-    if (req.file) {
-      ewayBillUrl = await dummyUploadToS3(req.file);
-    }
     const date1 = new Date(expectedPickupDate); //2025-08-23T00:00:00.000Z
     const formattedExpectedPickupDate = date1.toISOString().split("T")[0]; // 2025-08-23
 
@@ -158,19 +147,22 @@ exports.createShipment = async (req, res) => {
       materialType,
       customMaterialType: materialType === "Others" ? customMaterialType : null,
       weightKg: sanitizeNumber(weight),
-      lengthFt: sanitizeNumber(length),
-      widthFt: sanitizeNumber(width),
-      heightFt: sanitizeNumber(height),
+      volumetricWeightKg: sanitizeNumber(volumetricWeight),
+      length: sanitizeNumber(length),
+      width: sanitizeNumber(width),
+      height: sanitizeNumber(height),
+      dimension,
       transportMode,
       shipmentType,
       bodyType,
+      vehicleType,
+      smallVehicleType,
       truckSize,
       manpower,
       noOfLabours: manpower === "yes" ? sanitizeNumber(noOfLabours) : null,
       coolingType: bodyType == "Closed" ? coolingType : null,
       materialValue: sanitizeNumber(materialValue),
       additionalNotes,
-      ewayBill: ewayBillUrl,
     });
     // Notify admins
     // Notify admins

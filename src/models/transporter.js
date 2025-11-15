@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const bcrypt = require('bcrypt');
 const sequelize = require('../config/database');
 
-const Shipper = sequelize.define('Shipper', {
+const Transporter = sequelize.define('Transporter', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -11,7 +11,7 @@ const Shipper = sequelize.define('Shipper', {
   name: {
     type: DataTypes.STRING,
     field: 'name',
-    allowNull: true, 
+    allowNull: false, 
   },
   phoneNumber: {
     type: DataTypes.STRING,
@@ -27,13 +27,13 @@ const Shipper = sequelize.define('Shipper', {
   },
   companyName: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
     field: 'company_name'
   },
   companyAddress: {
     type: DataTypes.TEXT,
     field: 'company_address',
-    allowNull: true
+    allowNull: false
   },
   email: {
     type: DataTypes.STRING,
@@ -45,7 +45,7 @@ const Shipper = sequelize.define('Shipper', {
   gstNumber: {
     type: DataTypes.STRING,
     field: 'gst_number',
-    allowNull: true,
+    allowNull: false,
     validate: {
       // Custom GST validation
       isValidGST(value) {
@@ -55,6 +55,11 @@ const Shipper = sequelize.define('Shipper', {
       }
     }
   },  
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'password',
+  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
@@ -66,9 +71,27 @@ const Shipper = sequelize.define('Shipper', {
     field: 'updated_at',
   }
 }, {
-  tableName: 'shippers',
+  tableName: 'transporters',
   timestamps: true,
+  hooks: {
+    beforeCreate: async transporter => {
+      if (transporter.password) {
+        const salt = await bcrypt.genSalt(10);
+        transporter.password = await bcrypt.hash(transporter.password, salt);
+      }
+    },
+    beforeUpdate: async transporter => {
+      if (transporter.changed('password')) {
+        const salt = await bcrypt.genSalt(10);
+        transporter.password = await bcrypt.hash(transporter.password, salt);
+      }
+    },
+  }
 });
 
+// Instance method to verify password
+Transporter.prototype.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
-module.exports = Shipper;
+module.exports = Transporter;
